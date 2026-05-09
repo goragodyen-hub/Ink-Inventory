@@ -468,7 +468,7 @@ input:disabled, select:disabled {
     position: relative;
     border: 1px solid var(--input-border);
     border-radius: 12px;
-    background: var(--input-bg);
+    background: white; /* Always white for signature */
     overflow: hidden;
     width: 100%;
 }
@@ -477,8 +477,18 @@ input:disabled, select:disabled {
     width: 100%;
     height: 200px;
     cursor: crosshair;
-    background-color: transparent;
+    background-color: white; /* Always white background */
     touch-action: none; /* Prevent scrolling when signing on mobile */
+}
+
+/* Ensure signatures in table are readable */
+.data-table img {
+    background: white !important;
+    padding: 2px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 40px;
+    display: block;
 }
 
 .signature-pad.disabled {

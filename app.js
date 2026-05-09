@@ -273,9 +273,8 @@ function initSignaturePad() {
         canvas.height = canvas.offsetHeight * ratio;
         ctx.scale(ratio, ratio);
         
-        // Set stroke styles
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        ctx.strokeStyle = isDark ? '#f9fafb' : '#1f2937';
+        // Set stroke styles - Always black for signature
+        ctx.strokeStyle = '#000000';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -287,12 +286,9 @@ function initSignaturePad() {
     // Defer the first resize to ensure CSS is applied
     setTimeout(window.resizeSignatureCanvas, 100);
 
-    // Watch theme change for stroke color
+    // Watch theme change (removed canvas stroke color update to keep it black)
     document.getElementById('theme-toggle').addEventListener('click', () => {
-        setTimeout(() => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            ctx.strokeStyle = isDark ? '#f9fafb' : '#1f2937';
-        }, 10);
+        // Theme changes handled by CSS now
     });
 
     // Drawing Events
@@ -636,6 +632,17 @@ function renderDashboard(data) {
             const typeText = isIssued ? 'เบิกออก' : 'รับเข้า';
             const roomText = row.room || '-';
             
+            let signerHtml = '-';
+            if (isIssued && row.signer) {
+                if (row.signer.startsWith('http') || row.signer.startsWith('data:image')) {
+                    signerHtml = `<img src="${row.signer}" alt="ลายเซ็นต์" style="cursor: pointer;" onclick="window.open('${row.signer}', '_blank')">`;
+                } else {
+                    signerHtml = row.signer;
+                }
+            } else if (!isIssued && row.receiver) {
+                signerHtml = row.receiver;
+            }
+            
             return `
                 <tr>
                     <td>${date}</td>
@@ -643,11 +650,12 @@ function renderDashboard(data) {
                     <td>${row.model}</td>
                     <td>${row.serial}</td>
                     <td>${roomText}</td>
+                    <td>${signerHtml}</td>
                 </tr>
             `;
         }).join('');
     } else {
-        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">ไม่มีข้อมูล</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">ไม่มีข้อมูล</td></tr>`;
     }
 
     // Attach listener for Stock Modal
