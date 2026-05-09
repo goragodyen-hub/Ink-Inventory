@@ -110,7 +110,7 @@
                                 <label for="receive-serial">Serial Number (เครื่องพิมพ์)</label>
                                 <div class="input-with-icon">
                                     <i class="ph ph-barcode"></i>
-                                    <input type="text" id="receive-serial" placeholder="กรอก หรือ สแกนบาร์โค้ด" required autofocus>
+                                    <input type="text" id="receive-serial" list="serial-list" placeholder="กรอก หรือ สแกนบาร์โค้ด" required autofocus>
                                 </div>
                                 <div id="receive-machine-info" class="machine-info hidden">
                                     <span class="badge" id="receive-room-badge">ห้อง...</span>
@@ -163,7 +163,7 @@
                                 <label for="issue-serial">Serial Number (เครื่องพิมพ์)</label>
                                 <div class="input-with-icon">
                                     <i class="ph ph-barcode"></i>
-                                    <input type="text" id="issue-serial" placeholder="สแกน Serial Number ที่ต้องการเบิก" required>
+                                    <input type="text" id="issue-serial" list="serial-list" placeholder="สแกน Serial Number ที่ต้องการเบิก" required>
                                 </div>
                                 <div id="issue-machine-info" class="machine-info hidden">
                                     <span class="badge" id="issue-room-badge">ห้อง...</span>
@@ -229,11 +229,13 @@
         <button class="toast-close"><i class="ph ph-x"></i></button>
     </div>
 
-    <!-- Loading Overlay -->
     <div id="global-loader" class="loader-overlay hidden">
         <div class="spinner"></div>
         <p>กำลังประมวลผล...</p>
     </div>
+
+    <!-- Data List for Auto-complete -->
+    <datalist id="serial-list"></datalist>
 
     <script src="app.js"></script>
 </body>
