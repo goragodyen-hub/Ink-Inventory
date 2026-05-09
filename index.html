@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ink Inventory Management</title>
+    <!-- Favicon & Mobile Icons -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <nav class="sidebar glass-panel">
+            <div class="logo">
+                <i class="ph-fill ph-drop"></i>
+                <h2>รับ-เบิก หมึก<br>งานศูนย์คอมฯ</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-target="dashboard">
+                    <i class="ph ph-squares-four"></i>
+                    <span>ภาพรวมสต๊อก (Dashboard)</span>
+                </li>
+                <li data-target="receive">
+                    <i class="ph ph-box-arrow-down"></i>
+                    <span>รับหมึกเข้า (Receive)</span>
+                </li>
+                <li data-target="issue">
+                    <i class="ph ph-box-arrow-up"></i>
+                    <span>เบิกหมึกออก (Issue)</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="glass-panel">
+                <h1>ระบบจัดการสต๊อกหมึกพิมพ์</h1>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                        <i class="ph ph-moon"></i>
+                    </button>
+                    <button id="refresh-btn" class="icon-btn" title="Refresh Data">
+                        <i class="ph ph-arrows-clockwise"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="page-section active">
+                    <div class="stats-grid" id="stats-grid">
+                        <!-- Stats cards will be injected here via JS -->
+                        <div class="stat-card glass-panel skeleton"></div>
+                        <div class="stat-card glass-panel skeleton"></div>
+                        <div class="stat-card glass-panel skeleton"></div>
+                        <div class="stat-card glass-panel skeleton"></div>
+                    </div>
+
+                    <div class="recent-activity glass-panel">
+                        <div class="section-header">
+                            <h3>รายการล่าสุด</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่/เวลา</th>
+                                        <th>ประเภท</th>
+                                        <th>รุ่นหมึก</th>
+                                        <th>Serial Number</th>
+                                        <th>ห้องที่เบิก</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-table-body">
+                                    <!-- Data injected by JS -->
+                                    <tr>
+                                        <td colspan="5" class="text-center loading-text">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Receive Section -->
+                <section id="receive" class="page-section">
+                    <div class="form-container glass-panel">
+                        <div class="form-header">
+                            <div class="icon-circle receive-icon">
+                                <i class="ph ph-box-arrow-down"></i>
+                            </div>
+                            <h2>รับหมึกเข้าสต๊อก</h2>
+                            <p>สแกน Serial Number ของเครื่องพิมพ์ เพื่อรับหมึก</p>
+                        </div>
+                        <form id="receive-form">
+                            <div class="form-group">
+                                <label for="receive-serial">Serial Number (เครื่องพิมพ์)</label>
+                                <div class="input-with-icon">
+                                    <i class="ph ph-barcode"></i>
+                                    <input type="text" id="receive-serial" placeholder="กรอก หรือ สแกนบาร์โค้ด" required autofocus>
+                                </div>
+                                <div id="receive-machine-info" class="machine-info hidden">
+                                    <span class="badge" id="receive-room-badge">ห้อง...</span>
+                                    <span class="badge" id="receive-model-badge">รุ่น...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="receive-model">รุ่นหมึก (พิมพ์รุ่นเครื่อง แล้วตามด้วยสี เช่น IM C6010 M)</label>
+                                <div class="input-with-icon">
+                                    <i class="ph ph-palette"></i>
+                                    <input type="text" id="receive-model" placeholder="เช่น IM C6010 M, MP 6054S" required disabled>
+                                </div>
+                                <div id="color-suggestions" class="color-chips hidden">
+                                    <button type="button" class="chip color-c" data-color="C">Cyan (C)</button>
+                                    <button type="button" class="chip color-m" data-color="M">Magenta (M)</button>
+                                    <button type="button" class="chip color-y" data-color="Y">Yellow (Y)</button>
+                                    <button type="button" class="chip color-b" data-color="B">Black (B)</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>ผู้รับเข้าสต๊อก <span class="required">*</span></label>
+                                <div class="chip-group" id="receive-receiver-chips">
+                                    <button type="button" class="chip receiver-chip" data-value="กรกฎ เย็นคงคา">กรกฎ เย็นคงคา</button>
+                                    <button type="button" class="chip receiver-chip" data-value="พิชาวัจน์ เกิดเรืองสิน">พิชาวัจน์ เกิดเรืองสิน</button>
+                                </div>
+                                <input type="hidden" id="receive-receiver" required>
+                            </div>
+
+                            <button type="submit" class="btn-primary" id="btn-submit-receive" disabled>
+                                <span>บันทึกการรับเข้า</span>
+                                <i class="ph ph-check-circle"></i>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Issue Section -->
+                <section id="issue" class="page-section">
+                    <div class="form-container glass-panel">
+                        <div class="form-header">
+                            <div class="icon-circle issue-icon">
+                                <i class="ph ph-box-arrow-up"></i>
+                            </div>
+                            <h2>เบิกหมึกออกไปใช้งาน</h2>
+                            <p>สแกน Serial Number ของเครื่องพิมพ์ เพื่อค้นหาหมึกที่มีในสต๊อก</p>
+                        </div>
+                        <form id="issue-form">
+                            <div class="form-group">
+                                <label for="issue-serial">Serial Number (เครื่องพิมพ์)</label>
+                                <div class="input-with-icon">
+                                    <i class="ph ph-barcode"></i>
+                                    <input type="text" id="issue-serial" placeholder="สแกน Serial Number ที่ต้องการเบิก" required>
+                                </div>
+                                <div id="issue-machine-info" class="machine-info hidden">
+                                    <span class="badge" id="issue-room-badge">ห้อง...</span>
+                                </div>
+                                <small id="issue-serial-status" class="status-text"></small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="issue-model">หมึกที่มีในสต๊อก (เลือกเพื่อเบิก)</label>
+                                <select id="issue-model" required disabled>
+                                    <option value="" disabled selected>กรุณาระบุ Serial ก่อน...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="issue-room">ห้องที่นำไปใช้งาน</label>
+                                <input type="text" id="issue-room" placeholder="ระบุชื่อห้อง" required disabled>
+                            </div>
+                            
+                            <!-- Signature Pad -->
+                            <div class="form-group">
+                                <label>ลายเซ็นต์ผู้เบิก / ผู้รับ (เซ็นด้านล่างนี้)</label>
+                                <div class="signature-container">
+                                    <canvas id="signature-pad" width="400" height="200" class="signature-pad"></canvas>
+                                    <button type="button" id="btn-clear-signature" class="btn-clear">
+                                        <i class="ph ph-eraser"></i> ล้างลายเซ็นต์
+                                    </button>
+                                </div>
+                                <input type="hidden" id="issue-signer" required>
+                            </div>
+
+                            <button type="submit" class="btn-primary" id="btn-submit-issue" disabled>
+                                <span>บันทึกการเบิกออก</span>
+                                <i class="ph ph-paper-plane-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Stock Details Modal -->
+    <div id="stock-modal" class="modal-overlay hidden">
+        <div class="modal-container glass-panel">
+            <div class="modal-header">
+                <h3><i class="ph-fill ph-package"></i> สรุปของคงเหลือในสต๊อก</h3>
+                <button class="modal-close" id="btn-close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" id="stock-modal-body">
+                <!-- Data will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <div class="toast-icon"></div>
+        <div class="toast-content">
+            <h4 id="toast-title">Success</h4>
+            <p id="toast-message">Operation completed successfully.</p>
+        </div>
+        <button class="toast-close"><i class="ph ph-x"></i></button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="global-loader" class="loader-overlay hidden">
+        <div class="spinner"></div>
+        <p>กำลังประมวลผล...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
