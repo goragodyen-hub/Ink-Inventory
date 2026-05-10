@@ -40,6 +40,14 @@
                     <i class="ph ph-box-arrow-up"></i>
                     <span>เบิกหมึกออก (Issue)</span>
                 </li>
+                <li data-target="summary">
+                    <i class="ph ph-chart-bar"></i>
+                    <span>สรุปยอดใช้งาน (Summary)</span>
+                </li>
+                <li data-target="archive">
+                    <i class="ph ph-archive"></i>
+                    <span>คลังประวัติเก่า (Archives)</span>
+                </li>
             </ul>
         </nav>
 
@@ -200,6 +208,89 @@
                                 <i class="ph ph-paper-plane-right"></i>
                             </button>
                         </form>
+                    </div>
+                </section>
+
+                <!-- Summary Section -->
+                <section id="summary" class="page-section">
+                    <div class="summary-container glass-panel">
+                        <div class="section-header-with-action">
+                            <div class="header-text">
+                                <i class="ph ph-chart-bar"></i>
+                                <h3>สรุปรายการเบิกใช้งานหมึก (แยกตามห้อง)</h3>
+                            </div>
+                            <button id="btn-print-report" class="btn-secondary">
+                                <i class="ph ph-printer"></i> พิมพ์รายงาน
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>ลำดับ</th>
+                                        <th>ห้อง / แผนก</th>
+                                        <th>จำนวนที่เบิกไป (กล่อง)</th>
+                                        <th>รุ่นหมึกที่ใช้ล่าสุด</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summary-table-body">
+                                    <!-- Data injected by JS -->
+                                    <tr>
+                                        <td colspan="4" class="text-center">ไม่มีข้อมูลการเบิก</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Archive Section -->
+                <section id="archive" class="page-section">
+                    <div class="archive-container glass-panel">
+                        <div class="section-header-with-action">
+                            <div class="header-text">
+                                <i class="ph ph-archive"></i>
+                                <h3>คลังประวัติการใช้งาน (รายปีการศึกษา)</h3>
+                            </div>
+                        </div>
+                        
+                        <div class="archive-selector">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label for="archive-sheet-select">เลือกปีการศึกษา / ชื่อ Sheet</label>
+                                <select id="archive-sheet-select">
+                                    <option value="" disabled selected>กำลังโหลดรายชื่อ Sheet...</option>
+                                </select>
+                            </div>
+                            <button id="btn-load-archive" class="btn-primary" style="width: auto; padding: 0 24px; height: 50px; margin-top: 22px;">
+                                <i class="ph ph-magnifying-glass"></i> ดูข้อมูล
+                            </button>
+                        </div>
+
+                        <div class="archive-results hidden" id="archive-results-area">
+                            <div class="section-header-with-action">
+                                <h4 id="archive-title">ข้อมูลประวัติ</h4>
+                                <button id="btn-print-archive" class="btn-secondary">
+                                    <i class="ph ph-printer"></i> พิมพ์ประวัตินี้
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>วันที่/เวลา</th>
+                                            <th>ประเภท</th>
+                                            <th>รุ่นหมึก</th>
+                                            <th>Serial Number</th>
+                                            <th>ห้องที่เบิก</th>
+                                            <th>ผู้เบิก/ผู้รับ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="archive-table-body">
+                                        <!-- Data injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>

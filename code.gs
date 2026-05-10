@@ -18,6 +18,18 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(checkMachineStatus(serial)))
       .setMimeType(ContentService.MimeType.JSON);
   }
+
+  if (action === "getSheets") {
+    const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName());
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", sheets: sheets }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === "getArchiveData") {
+    const sheetName = e.parameter.sheetName;
+    return ContentService.createTextOutput(JSON.stringify(getInventoryData(sheetName)))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   
   return ContentService.createTextOutput(JSON.stringify({ status: "success", version: SCRIPT_VERSION }))
     .setMimeType(ContentService.MimeType.JSON);
@@ -51,15 +63,16 @@ function doPost(e) {
 // Core Functions
 // ==========================================
 
-function getSheet() {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+function getSheet(name) {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name || SHEET_NAME);
 }
 
-function getInventoryData() {
-  const sheet = getSheet();
+function getInventoryData(customSheetName) {
+  const sheet = getSheet(customSheetName);
+  if (!sheet) return { status: "error", message: "Sheet not found" };
   const data = sheet.getDataRange().getValues();
   
-  if (data.length <= 1) return []; // Only headers
+  if (data.length <= 1) return { status: "success", recentActivity: [], allRows: [] }; // Only headers
   
   const headers = data[0];
   const rows = [];
@@ -144,10 +157,9 @@ function issueInk(serial, model, room, signatureBase64) {
   
   // Process Signature Image
   let imageUrl = "";
-  if (signatureBase64) {
+  if (signatureBase64 && signatureBase64.includes(",")) {
     if (DRIVE_FOLDER_ID !== "") {
       try {
-        // Remove data URI prefix (e.g., "data:image/png;base64,")
         const base64Data = signatureBase64.split(",")[1];
         const decoded = Utilities.base64Decode(base64Data);
         const blob = Utilities.newBlob(decoded, "image/png", "Sign_" + serial + "_" + new Date().getTime() + ".png");
@@ -155,14 +167,16 @@ function issueInk(serial, model, room, signatureBase64) {
         const file = folder.createFile(blob);
         // Make it accessible
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        imageUrl = file.getUrl();
+        // USE DIRECT IMAGE LINK FOR GOOGLE DRIVE
+        imageUrl = "https://drive.google.com/uc?export=view&id=" + file.getId();
       } catch (e) {
-        imageUrl = "Error saving image: " + e.message;
+        imageUrl = "Error: " + e.message;
       }
     } else {
-      // Fallback: Save base64 string directly (may make sheet laggy if done often)
       imageUrl = signatureBase64; 
     }
+  } else {
+    imageUrl = "-";
   }
   
   // Update the row

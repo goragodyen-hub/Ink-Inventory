@@ -1,6 +1,6 @@
 // Configuration
 // IMPORTANT: Replace this URL with your Google Apps Script Web App URL after deployment
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgCiR9fwbnYCED9Znc_cgq5M34-d9AxDcLaspyF_ouyyBnieiVtX_-Cd0MVXWM3KeN/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgmmeiapMGCbJKZQq588E4gpxuZtWkgx3NEyB03eJYXq5oMEF2MBtVW6GkRKvKaINz/exec";
 
 // Master Data for Printers
 const MACHINE_MASTER = {
@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (SCRIPT_URL && !SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
         fetchData();
+        fetchSheetList(); // Added this
     } else {
         showToast("Welcome! Please set your Google Apps Script URL in app.js", "info");
         renderMockData();
@@ -223,6 +224,21 @@ function setupForms() {
     if (document.querySelector('.toast-close')) {
         document.querySelector('.toast-close').addEventListener('click', () => toast.classList.remove('show'));
     }
+
+    const btnPrint = document.getElementById('btn-print-report');
+    if (btnPrint) {
+        btnPrint.addEventListener('click', () => window.print());
+    }
+
+    const btnLoadArchive = document.getElementById('btn-load-archive');
+    if (btnLoadArchive) {
+        btnLoadArchive.addEventListener('click', fetchArchiveData);
+    }
+
+    const btnPrintArchive = document.getElementById('btn-print-archive');
+    if (btnPrintArchive) {
+        btnPrintArchive.addEventListener('click', () => window.print());
+    }
 }
 
 // Signature Pad Logic
@@ -313,6 +329,7 @@ async function fetchData() {
         if (result.status === 'success') {
             inventoryData = result.allRows;
             renderDashboard(result);
+            renderSummaryReport(); // Added this
         } else {
             showToast("Failed: " + result.message, "error");
         }
@@ -701,4 +718,129 @@ function renderMockData() {
             { model: "IM C6010 C", serial: "9173RB20165", dateReceived: "10/05/2026", dateIssued: "11/05/2026", room: "วิชาการ", signer: "สมชาย" }
         ]
     });
+    renderSummaryReport();
+}
+
+function renderSummaryReport() {
+    const tableBody = document.getElementById('summary-table-body');
+    if (!tableBody) return;
+
+    // Filter for issued items only
+    const issuedItems = inventoryData.filter(r => r.dateIssued && r.dateIssued !== "");
+    
+    if (issuedItems.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center">ไม่มีข้อมูลการเบิก</td></tr>';
+        return;
+    }
+
+    // Group by room
+    const summaryData = {};
+    issuedItems.forEach(item => {
+        const room = item.room || 'ไม่ระบุห้อง';
+        if (!summaryData[room]) {
+            summaryData[room] = {
+                count: 0,
+                lastModel: item.model,
+                room: room
+            };
+        }
+        summaryData[room].count++;
+        summaryData[room].lastModel = item.model; // Most recent one (assuming order)
+    });
+
+    // Convert to array and sort by count descending
+    const sortedSummary = Object.values(summaryData).sort((a, b) => b.count - a.count);
+
+    tableBody.innerHTML = sortedSummary.map((item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td class="font-medium">${item.room}</td>
+            <td><span class="stock-qty" style="font-size: 14px; padding: 4px 12px;">${item.count}</span></td>
+            <td style="color: var(--text-light); font-size: 13px;">${item.lastModel}</td>
+        </tr>
+    `).join('');
+}
+
+async function fetchSheetList() {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=getSheets`);
+        const result = await response.json();
+        if (result.status === 'success') {
+            const select = document.getElementById('archive-sheet-select');
+            if (select) {
+                select.innerHTML = '<option value="" disabled selected>เลือกปีการศึกษา / Sheet...</option>';
+                result.sheets.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching sheets:", error);
+    }
+}
+
+async function fetchArchiveData() {
+    const select = document.getElementById('archive-sheet-select');
+    const sheetName = select.value;
+    if (!sheetName) {
+        showToast("กรุณาเลือก Sheet ที่ต้องการดู", "error");
+        return;
+    }
+
+    showLoader();
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=getArchiveData&sheetName=${encodeURIComponent(sheetName)}`);
+        const result = await response.json();
+        if (result.status === 'success') {
+            renderArchiveTable(result.allRows, sheetName);
+            document.getElementById('archive-results-area').classList.remove('hidden');
+        } else {
+            showToast(result.message, "error");
+        }
+    } catch (error) {
+        showToast("Network error.", "error");
+    } finally {
+        hideLoader();
+    }
+}
+
+function renderArchiveTable(rows, sheetName) {
+    const tableBody = document.getElementById('archive-table-body');
+    const title = document.getElementById('archive-title');
+    if (!tableBody || !title) return;
+
+    title.textContent = `ข้อมูลประวัติจาก Sheet: ${sheetName}`;
+
+    if (!rows || rows.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">ไม่มีข้อมูลใน Sheet นี้</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = rows.map((row, index) => {
+        const isIssued = row.dateIssued !== "";
+        const date = isIssued ? row.dateIssued : row.dateReceived;
+        const typeClass = isIssued ? 'issue' : 'receive';
+        const typeText = isIssued ? 'เบิกออก' : 'รับเข้า';
+        
+        let signerHtml = '-';
+        if (isIssued && row.signer) {
+            if (row.signer.startsWith('http') || row.signer.startsWith('data:image')) {
+                signerHtml = `<img src="${row.signer}" alt="ลายเซ็นต์">`;
+            } else { signerHtml = row.signer; }
+        } else if (!isIssued && row.receiver) {
+            signerHtml = row.receiver;
+        }
+
+        return `<tr>
+            <td>${date}</td>
+            <td><span class="badge ${typeClass}">${typeText}</span></td>
+            <td>${row.model}</td>
+            <td>${row.serial}</td>
+            <td>${row.room || '-'}</td>
+            <td>${signerHtml}</td>
+        </tr>`;
+    }).reverse().join('');
 }
