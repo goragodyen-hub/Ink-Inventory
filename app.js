@@ -513,7 +513,8 @@ function renderDashboard(data) {
     `;
 
     if (data.recentActivity && data.recentActivity.length > 0) {
-        tableBody.innerHTML = data.recentActivity.map(row => {
+        window.currentRecentActivity = data.recentActivity;
+        tableBody.innerHTML = data.recentActivity.map((row, index) => {
             const isIssued = row.dateIssued !== "";
             const date = isIssued ? row.dateIssued : row.dateReceived;
             const typeClass = isIssued ? 'issue' : 'receive';
@@ -522,13 +523,13 @@ function renderDashboard(data) {
             let signerHtml = '-';
             if (isIssued && row.signer) {
                 if (row.signer.startsWith('http') || row.signer.startsWith('data:image')) {
-                    signerHtml = `<img src="${row.signer}" alt="ลายเซ็นต์" onclick="window.open('${row.signer}', '_blank')">`;
+                    signerHtml = `<img src="${row.signer}" alt="ลายเซ็นต์" onclick="window.open('${row.signer}', '_blank'); event.stopPropagation();">`;
                 } else { signerHtml = row.signer; }
             } else if (!isIssued && row.receiver) {
                 signerHtml = row.receiver;
             }
 
-            return `<tr>
+            return `<tr class="clickable-row" onclick="openTxModal(${index})">
                 <td>${date}</td>
                 <td><span class="badge ${typeClass}">${typeText}</span></td>
                 <td>${row.model}</td>
@@ -612,6 +613,82 @@ function openStockModal(allRows) {
 
 if (document.getElementById('btn-close-modal')) {
     document.getElementById('btn-close-modal').onclick = () => document.getElementById('stock-modal').classList.add('hidden');
+}
+
+// Transaction Modal Logic
+function openTxModal(index) {
+    if (!window.currentRecentActivity || !window.currentRecentActivity[index]) return;
+    const row = window.currentRecentActivity[index];
+    const modal = document.getElementById('tx-modal');
+    const modalBody = document.getElementById('tx-modal-body');
+    if (!modal || !modalBody) return;
+    
+    const isIssued = row.dateIssued !== "";
+    const statusText = isIssued ? 'เบิกออกแล้ว' : 'อยู่ในสต๊อก (รับเข้าใหม่)';
+    const statusClass = isIssued ? 'issue' : 'receive';
+    
+    let issuerHtml = '-';
+    if (row.signer) {
+        if (row.signer.startsWith('http') || row.signer.startsWith('data:image')) {
+            issuerHtml = `<img src="${row.signer}" alt="ลายเซ็นต์" class="tx-signature-img" onclick="window.open('${row.signer}', '_blank')">`;
+        } else {
+            issuerHtml = row.signer;
+        }
+    }
+
+    modalBody.innerHTML = `
+        <div class="tx-details">
+            <div class="tx-detail-item">
+                <span class="tx-label">สถานะปัจจุบัน:</span>
+                <span class="badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="tx-detail-item">
+                <span class="tx-label">รุ่นหมึก:</span>
+                <span class="tx-value">${row.model}</span>
+            </div>
+            <div class="tx-detail-item">
+                <span class="tx-label">Serial Number:</span>
+                <span class="tx-value">${row.serial}</span>
+            </div>
+            <div class="tx-detail-item">
+                <span class="tx-label">ห้อง:</span>
+                <span class="tx-value">${row.room || '-'}</span>
+            </div>
+            <hr class="tx-divider">
+            <div class="tx-detail-group">
+                <h4 style="margin-bottom: 12px; color: var(--secondary-color); display: flex; align-items: center; gap: 6px;">
+                    <i class="ph ph-box-arrow-down"></i> ข้อมูลการรับเข้า
+                </h4>
+                <div class="tx-detail-item">
+                    <span class="tx-label">วันที่รับเข้า:</span>
+                    <span class="tx-value">${row.dateReceived || '-'}</span>
+                </div>
+                <div class="tx-detail-item">
+                    <span class="tx-label">ผู้รับเข้า:</span>
+                    <span class="tx-value font-medium">${row.receiver || '-'}</span>
+                </div>
+            </div>
+            <hr class="tx-divider">
+            <div class="tx-detail-group">
+                <h4 style="margin-bottom: 12px; color: var(--warning-color); display: flex; align-items: center; gap: 6px;">
+                    <i class="ph ph-box-arrow-up"></i> ข้อมูลการเบิกออก
+                </h4>
+                <div class="tx-detail-item">
+                    <span class="tx-label">วันที่เบิกออก:</span>
+                    <span class="tx-value">${row.dateIssued || '-'}</span>
+                </div>
+                <div class="tx-detail-item" style="align-items: flex-start;">
+                    <span class="tx-label" style="margin-top: 4px;">ผู้เบิก/ลายเซ็นต์:</span>
+                    <span class="tx-value">${issuerHtml}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+}
+
+if (document.getElementById('btn-close-tx-modal')) {
+    document.getElementById('btn-close-tx-modal').onclick = () => document.getElementById('tx-modal').classList.add('hidden');
 }
 
 function renderMockData() {
