@@ -1,0 +1,58 @@
+{
+  "name": "รับ-เบิก หมึก งานศูนย์คอมฯ",
+  "short_name": "Ink Inventory",
+  "description": "ระบบจัดการสต๊อกหมึกพิมพ์ งานศูนย์คอมพิวเตอร์",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "docs/01.PNG",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard หน้าภาพรวมสต๊อก"
+    },
+    {
+      "src": "docs/04.PNG",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "หน้ารับหมึกเข้าสต๊อก"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "รับหมึกเข้า",
+      "short_name": "รับเข้า",
+      "description": "บันทึกการรับหมึกเข้าสต๊อก",
+      "url": "./index.html#receive",
+      "icons": [{ "src": "icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "เบิกหมึกออก",
+      "short_name": "เบิกออก",
+      "description": "บันทึกการเบิกหมึกออก",
+      "url": "./index.html#issue",
+      "icons": [{ "src": "icon.png", "sizes": "96x96" }]
+    }
+  ]
+}

@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -342,5 +345,110 @@
     <datalist id="serial-list"></datalist>
 
     <script src="app.js"></script>
+
+    <!-- PWA: Install Prompt Banner -->
+    <div id="pwa-install-banner" style="
+        display: none;
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--glass-bg, rgba(255,255,255,0.95));
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border, rgba(255,255,255,0.5));
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(79,70,229,0.18);
+        padding: 16px 24px;
+        z-index: 9999;
+        max-width: 360px;
+        width: calc(100% - 48px);
+        animation: slideUpIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    ">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <img src="icon.png" style="width:48px; height:48px; border-radius:12px; flex-shrink:0;" alt="App Icon">
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:14px; margin-bottom:2px;">ติดตั้งแอปนี้</div>
+                <div style="font-size:12px; color:var(--text-light, #6b7280); line-height:1.4;">เพิ่มไปยัง Desktop / หน้าจอหลัก เพื่อเปิดได้เร็วขึ้น</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+            <button id="pwa-install-btn" style="
+                flex:1; padding:10px; background:var(--primary-color,#4f46e5);
+                color:white; border:none; border-radius:10px;
+                font-size:14px; font-weight:600; cursor:pointer;
+                font-family:inherit; transition:all 0.2s;
+            ">📲 ติดตั้ง</button>
+            <button id="pwa-dismiss-btn" style="
+                padding:10px 16px; background:transparent;
+                color:var(--text-light,#6b7280); border:1px solid var(--input-border,#d1d5db);
+                border-radius:10px; font-size:14px; cursor:pointer;
+                font-family:inherit; transition:all 0.2s;
+            ">ไว้ก่อน</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideUpIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+
+    <!-- PWA: Service Worker Registration -->
+    <script>
+        // ลงทะเบียน Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+                    .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
+            });
+        }
+
+        // จับ install prompt ที่ browser สร้างให้
+        let deferredInstallPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // ป้องกัน browser แสดง prompt อัตโนมัติ
+            deferredInstallPrompt = e;
+
+            // ไม่แสดงถ้าผู้ใช้เคย dismiss ไปแล้ว
+            if (!localStorage.getItem('pwa-dismissed')) {
+                setTimeout(() => {
+                    if (installBanner) installBanner.style.display = 'block';
+                }, 3000); // รอ 3 วินาทีก่อนแสดง
+            }
+        });
+
+        // กดปุ่ม "ติดตั้ง"
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) return;
+                installBanner.style.display = 'none';
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                console.log('[PWA] Install outcome:', outcome);
+                deferredInstallPrompt = null;
+            });
+        }
+
+        // กดปุ่ม "ไว้ก่อน"
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                installBanner.style.display = 'none';
+                localStorage.setItem('pwa-dismissed', '1');
+            });
+        }
+
+        // แสดงข้อความเมื่อ install สำเร็จ
+        window.addEventListener('appinstalled', () => {
+            installBanner.style.display = 'none';
+            deferredInstallPrompt = null;
+            console.log('[PWA] App installed successfully!');
+        });
+    </script>
 </body>
 </html>
